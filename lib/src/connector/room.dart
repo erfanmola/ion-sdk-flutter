@@ -148,11 +148,9 @@ class _RoomGRPCClient extends EventEmitter {
   Service service;
   Connector connector;
   _RoomGRPCClient(this.connector, this.service) {
-    _client = room.RoomSignalClient(connector.grpcClientChannel(),
-        options: connector.callOptions());
+    _client = room.RoomSignalClient(connector.grpcClientChannel(), options: connector.callOptions());
     _requestStream = StreamController<pb.Request>();
-    _serviceClient = room.RoomServiceClient(connector.grpcClientChannel(),
-        options: connector.callOptions());
+    _serviceClient = room.RoomServiceClient(connector.grpcClientChannel(), options: connector.callOptions());
   }
 
   late room.RoomSignalClient _client;
@@ -163,16 +161,13 @@ class _RoomGRPCClient extends EventEmitter {
   void connect() {
     _replyStream = _client.signal(_requestStream.stream);
     _replyStream.listen(_onSignalReply, onDone: () {
-      _replyStream.trailers
-          .then((trailers) => connector.onTrailers(service, trailers));
+      _replyStream.trailers.then((trailers) => connector.onTrailers(service, trailers));
       connector.onClosed(service);
     }, onError: (e) {
-      _replyStream.trailers
-          .then((trailers) => connector.onTrailers(service, trailers));
+      _replyStream.trailers.then((trailers) => connector.onTrailers(service, trailers));
       connector.onError(service, e);
     });
-    _replyStream.headers
-        .then((headers) => connector.onHeaders(service, headers));
+    _replyStream.headers.then((headers) => connector.onHeaders(service, headers));
   }
 
   void close() {
