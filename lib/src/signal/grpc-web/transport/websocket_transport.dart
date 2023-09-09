@@ -29,10 +29,7 @@ class WebSocketTransportStream implements GrpcTransportStream {
   WebSocketTransportStream(this._uri, this._metadata, {onError, onDone})
       : _onError = onError,
         _onDone = onDone {
-    _incomingProcessor.stream
-        .transform(GrpcWebDecoder())
-        .transform(grpcDecompressor())
-        .listen((event) {
+    _incomingProcessor.stream.transform(GrpcWebDecoder()).transform(grpcDecompressor()).listen((event) {
       if (event is GrpcMetadata) {
         final metadata = event.metadata;
         if (metadata.containsKey('grpc-status')) {
@@ -51,8 +48,7 @@ class WebSocketTransportStream implements GrpcTransportStream {
       return;
     }
 
-    _channel =
-        HtmlWebSocketChannel.connect(_uri, protocols: ['grpc-websockets']);
+    _channel = HtmlWebSocketChannel.connect(_uri, protocols: ['grpc-websockets']);
     _metadata.addAll({
       'content-type': 'application/grpc-web+proto',
       'x-grpc-web': '1',
@@ -119,8 +115,7 @@ class WebSocketClientConnection extends ClientConnection {
         assert(port == null || port > 0);
 
   @override
-  String get authority =>
-      '$host:${port ?? (options.credentials.isSecure ? 443 : 80)}';
+  String get authority => '$host:${port ?? (options.credentials.isSecure ? 443 : 80)}';
 
   @override
   String get scheme => "ws${options.credentials.isSecure ? "s" : ""}";
@@ -138,12 +133,9 @@ class WebSocketClientConnection extends ClientConnection {
 */
 
   @override
-  GrpcTransportStream makeRequest(String path, Duration? timeout,
-      Map<String, String> metadata, ErrorHandler onRequestFailure,
-      {required CallOptions callOptions}) {
+  GrpcTransportStream makeRequest(String path, Duration? timeout, Map<String, String> metadata, ErrorHandler onRequestFailure, {required CallOptions callOptions}) {
     final uri = Uri.parse('$scheme://$host:$port$path');
-    final transportStream = WebSocketTransportStream(uri, metadata,
-        onError: onRequestFailure, onDone: _removeStream);
+    final transportStream = WebSocketTransportStream(uri, metadata, onError: onRequestFailure, onDone: _removeStream);
     _requests.add(transportStream);
     return transportStream;
   }
@@ -166,4 +158,9 @@ class WebSocketClientConnection extends ClientConnection {
 
   @override
   Future<void> shutdown() async {}
+
+  @override
+  set onStateChanged(void Function(ConnectionState p1) cb) {
+    // TODO: implement onStateChanged
+  }
 }

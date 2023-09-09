@@ -136,6 +136,10 @@ class Room extends Service {
 
   void message(String sid, Message message) => _sig?.sendMessage(sid, message);
 
+  void createRoom(RoomInfo roomInfo) => _sig?.createRoom(roomInfo);
+
+  void updateRoom(RoomInfo roomInfo) => _sig?.updateRoom(roomInfo);
+
   void updatePeer(Peer peer) => _sig?.updatePeer(peer);
 
   @override
@@ -237,6 +241,30 @@ class _RoomGRPCClient extends EventEmitter {
         ..vendor = peer.vendor
         ..direction = pb.Peer_Direction.values[peer.direction.index],
     ));
+  }
+
+  void createRoom(RoomInfo roomInfo) async {
+    await _serviceClient.createRoom(pb.CreateRoomRequest(
+        room: pb.Room(
+      sid: roomInfo.sid,
+      name: roomInfo.name,
+      lock: roomInfo.lock,
+      password: roomInfo.password,
+      description: roomInfo.description,
+      maxPeers: roomInfo.maxpeers,
+    )));
+  }
+
+  void updateRoom(RoomInfo roomInfo) async {
+    await _serviceClient.updateRoom(pb.UpdateRoomRequest(
+        room: pb.Room(
+      sid: roomInfo.sid,
+      name: roomInfo.name,
+      lock: roomInfo.lock,
+      password: roomInfo.password,
+      description: roomInfo.description,
+      maxPeers: roomInfo.maxpeers,
+    )));
   }
 
   void _onSignalReply(pb.Reply reply) {

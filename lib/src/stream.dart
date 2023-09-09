@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import 'client.dart';
@@ -221,22 +222,55 @@ class LocalStream {
     */
   }
 
-  Future<void> updateTrack({required MediaStreamTrack next, MediaStreamTrack? prev}) async {
-    await _stream.addTrack(next);
+//!!  prev 를 없애지말고  sender에서만 스탑을 하고 계속 replaceTrack 으로 대체하면 안되나??
+  Future<void> updateTrack_({
+    required MediaStreamTrack next,
+    /* MediaStreamTrack? prev */
+  }) async {
+    //await _stream.addTrack(next);
     // If published, replace published track with track from new device
-    if (prev != null && prev.enabled) {
-      await _stream.removeTrack(prev);
-      await prev.stop();
+    if (next.enabled) {
+      // await _stream.removeTrack(prev);
+      //await prev.stop();
       if (_pc != null) {
         await _pc!.getSenders().then((senders) => senders.forEach((RTCRtpSender sender) {
               if (sender.track?.kind == next.kind) {
-                sender.track?.stop();
-                sender.replaceTrack(next);
+                //sender.track?.stop(); //이걸 스탑해버리면 replacetrack 에서 track 이 null 이라고 오류남..
+                sender.replaceTrack(next); //MediaStreamTrack has been disposed.  두번째 부터는 이렇게 나옴..
               }
             }));
       }
     } else {
       await _stream.addTrack(next);
+
+      if (_pc != null) {
+        publishTrack(track: next);
+      }
+    }
+  }
+
+  Future<void> updateTrack({required MediaStreamTrack? next, MediaStreamTrack? prev}) async {
+    //await _stream.addTrack(next);
+    // If published, replace published track with track from new device
+
+    if (next != null && prev != null && prev.enabled) {
+      // await _stream.removeTrack(prev);
+      //  await prev.stop();
+
+      if (_pc != null) {
+        print('replaceTrack   pc 가 null 인가??  $_pc');
+        await _pc!.getSenders().then((senders) => senders.forEach((RTCRtpSender sender) {
+              print('replaceTrack 할건가  sender   ${sender.track}');
+              if (sender.track?.kind == next.kind) {
+                print('replaceTrack 할건가');
+                //   sender.track?.stop();
+                sender.replaceTrack(next);
+              }
+            }));
+      }
+    } else {
+      print('replaceTrack 안할건가'); //!! 계속 replace 를 안하고 계속 새로 publish 를 해버리네...   이게 문젠데...
+      await _stream.addTrack(next!);
 
       if (_pc != null) {
         publishTrack(track: next);
@@ -253,8 +287,12 @@ class LocalStream {
     if (_pc != null) {
       var tracks = _stream.getTracks();
       await _pc!.getSenders().then((senders) => senders.forEach((RTCRtpSender s) async {
-            if (tracks.contains((e) => s.track?.id == e.id)) {
-              await _pc?.removeTrack(s);
+            //  if (tracks.contains((e) => s.track?.id == e.id)) {
+            if (tracks.firstWhereOrNull((e) => s.track?.id == e.id) != null) {
+              if (s.track != null) {
+                await _pc?.removeTrack(s);
+              }
+              // await s.track!.stop();
             }
           }));
     }
@@ -270,17 +308,50 @@ class LocalStream {
 
   // 'audio' | 'video'
   Future<void> mute(String kind) async {
+    return;
     var track = getTrack(kind);
     if (track != null) {
-      await track.stop();
+      print('mute mute mute :: $kind');
+      print(track);
+
+      // await _stream.removeTrack(track); //!! 이걸 안써서   unmute 때 track null 이라고 removetrack 에서 오류 나는거 아닌가???   //!!!!!!! 하 씨발 맞네.....
+      //!! 그래도 똑같이 서버에서는 잔여 track 이 남아있네...
+      // await track.stop(); //!! 이게 나중이어야 함..
+
+      if (_pc != null) {
+        await _pc!.getSenders().then((senders) => senders.forEach((RTCRtpSender sender) async {
+              if (sender.track?.kind == track.kind) {
+                if (sender.track != null) {
+                  await _pc?.removeTrack(sender);
+                }
+                await sender.track?.stop();
+                //  sender.replaceTrack(next);
+              }
+            }));
+      }
     }
+  }
+  //todo 근데 일단 mute unmute 는 로컬에서 되는거 같은데.. 문제는 로컬에서 로컬 스트림 화면도 멈춘다는거.......
+  //todo 이걸 mute unmute 를 활용해서 publish unpublish 를 하면?? 아님 mute 를 서버에  await s.track!.stop();  하게 하면??
+
+  /// 'audio' | 'video'
+  Future<void> unmute_(String kind) async {
+    var prev = getTrack(kind);
+    print('prev');
+    print(prev);
+    var track = await getNewTrack(kind);
+    await updateTrack(
+      next: prev!, /* prev: prev */
+    );
   }
 
   /// 'audio' | 'video'
   Future<void> unmute(String kind) async {
     var prev = getTrack(kind);
     var track = await getNewTrack(kind);
-    await updateTrack(next: track, prev: prev);
+    print('prev');
+    print(prev); //!! mute 때 removetrack 을 해서 그런가...   null 이 되네...
+    await updateTrack(next: prev!, prev: prev);
   }
 }
 

@@ -9,7 +9,7 @@ dependencies:
   cupertino_icons: ^1.0.0
   flutter:
     sdk: flutter
-  flutter_icons: ^1.0.0
+  #flutter_icons: ^1.0.0
   flutter_ion:
     path: ../
 
