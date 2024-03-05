@@ -3,19 +3,16 @@ version: 1.0.0
 description: Ion SDK for flutter, For live broadcast, video conference, etc., support mobile/deskop/web.
 homepage: https://github.com/pion/ion-sdk-flutter
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.12.0 <4.0.0"
 
 dependencies:
   events2: ^1.0.0
-  flutter_webrtc: ^0.9.40
+  flutter_webrtc: ^0.9.48+hotfix.1
   grpc: ^3.2.4
-  protobuf: ^2.1.0
+  protobuf: ^3.1.0
   sdp_transform: ^0.3.2
-  uuid: ^3.0.6
-  web_socket_channel: ^2.2.0
+  uuid: ^4.3.3
+  web_socket_channel: ^2.4.4
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  pedantic: ^1.11.1
-  test: ^1.16.8
+  test: ^1.25.2
