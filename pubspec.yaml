@@ -12,7 +12,7 @@ dependencies:
   protobuf: ^3.1.0
   sdp_transform: ^0.3.2
   uuid: ^4.3.3
-  web_socket_channel: ^2.4.4
+  web_socket_channel: ^2.4.0
 
 dev_dependencies:
   test: ^1.25.2
